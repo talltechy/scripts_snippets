@@ -10,18 +10,22 @@ else
     exit 1
 fi
 
+# Install virt-what if not already installed
+if ! command -v virt-what > /dev/null; then
+    sudo $PKG_MANAGER update -y
+    sudo $PKG_MANAGER install virt-what -y
+fi
+
 # Check if the system is running as a VM
-if [ -d "/sys/class/dmi/id" ]; then
-    if [ "$(cat /sys/class/dmi/id/product_name)" == "QEMU Virtual Machine" ]; then
-        echo "System is running as a VM."
-    else
-        echo "System is not running as a VM."
-        exit 1
-    fi
+if virt-what | grep -q "kvm"; then
+    echo "System is running as a VM."
 else
-    echo "Unable to determine if the system is running as a VM."
+    echo "System is not running as a VM."
     exit 1
 fi
+
+# Remove virt-what
+sudo $PKG_MANAGER remove virt-what -y
 
 # Check if qemu-guest-agent is installed
 if ! dpkg -l | grep -q qemu-guest-agent; then
