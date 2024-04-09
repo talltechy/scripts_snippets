@@ -6,9 +6,6 @@ if ! sudo -v &> /dev/null; then
     exit 1
 fi
 
-# Enable the Fedora 39+ modular repository
-sudo dnf config-manager --set-enabled modular
-
 # Install dnf5 and its dependencies, install dialog and tmux packages
 sudo dnf install -y dnf5 dnf5-plugins dialog tmux
 
@@ -17,9 +14,6 @@ echo -e "max_parallel_downloads=10\nfastestmirror=True" | sudo tee -a /etc/dnf/d
 
 # Create a symbolic link from dnf to dnf5
 sudo ln -sf /usr/bin/dnf5 /usr/bin/dnf
-
-# Disable the Fedora 39+ modular repository
-sudo dnf config-manager --set-disabled modular
 
 # Clean up the package cache
 sudo dnf clean all
