@@ -10,6 +10,12 @@ else
     exit 1
 fi
 
+# Check if qemu-guest-agent is already running
+if sudo systemctl is-active --quiet qemu-guest-agent; then
+    echo "qemu-guest-agent is already running."
+    exit 0
+fi
+
 # Install virt-what if not already installed
 if ! command -v virt-what > /dev/null; then
     sudo $PKG_MANAGER update -y
