@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `auto-update.sh` script is designed to automate the process of updating and upgrading packages on an Alpine Linux system. It includes error handling, logging, and email notifications to ensure that each step is completed successfully and to provide detailed information about the process. The script also checks if it is running on Alpine Linux and exits if it is not.
+The `auto-update.sh` script is designed to automate the process of updating and upgrading packages on an Alpine Linux system. It includes error handling, logging, and email notifications to ensure that each step is completed successfully and to provide detailed information about the process. The script also checks if it is running on Alpine Linux and exits if it is not. Additionally, the script can auto-generate the `.env` file if it doesn't exist and defaults to sending an email to the root user locally if no email is configured.
 
 ## Usage
 
@@ -12,10 +12,10 @@ The `auto-update.sh` script is designed to automate the process of updating and 
 
 1. **Create a configuration file:**
 
-   Create a file named `auto-update.env` in the `/etc/` directory with the following content:
+   If the configuration file `/etc/auto-update.env` does not exist, the script will automatically create it with the following default content:
 
    ```sh
-   AUTO_UPDATE_EMAIL="your-email@example.com"
+   AUTO_UPDATE_EMAIL=""
 
    # Optional settings for secure email relay
    SMTP_SERVER="smtp.example.com"
@@ -55,26 +55,32 @@ The `auto-update.sh` script is designed to automate the process of updating and 
   If any step fails (updating the package list, upgrading packages, or cleaning the cache), the script logs the failure, sends an email notification, and exits with a non-zero status code.
 
 - **Email Notification:**
-  The script sends an email notification with the log file content to a specified email address upon completion. The email address is set using the `AUTO_UPDATE_EMAIL` environment variable from the configuration file. If optional SMTP settings are provided, the script uses them to send the email via a secure email relay. Ensure that `msmtp` or a similar secure email sending tool is installed and configured on your system.
+  The script sends an email notification with the log file content to a specified email address upon completion. The email address is set using the `AUTO_UPDATE_EMAIL` environment variable from the configuration file. If optional SMTP settings are provided, the script uses them to send the email via a secure email relay. If no email address is configured, the script defaults to sending the email to the root user locally. Ensure that `msmtp` or a similar secure email sending tool is installed and configured on your system.
 
 - **OS Check:**
   The script checks if it is running on Alpine Linux by looking for the `/etc/alpine-release` file. If the file is not found, the script logs a message and exits.
+
+- **Auto-Generate .env File:**
+  If the `/etc/auto-update.env` file does not exist, the script will create it with default values and set the appropriate permissions.
 
 ## Script Steps
 
 1. **Check the operating system:**
    The script verifies that it is running on Alpine Linux.
 
-2. **Update the package list:**
+2. **Auto-generate the .env file:**
+   If the `/etc/auto-update.env` file does not exist, the script creates it with default values.
+
+3. **Update the package list:**
    The script runs `apk update` to refresh the list of available packages.
 
-3. **Upgrade all installed packages:**
+4. **Upgrade all installed packages:**
    The script runs `apk upgrade` to upgrade all installed packages to their latest versions.
 
-4. **Clean up the package cache:**
+5. **Clean up the package cache:**
    The script runs `apk cache clean` to remove any cached package files that are no longer needed.
 
-5. **Send email notification:**
+6. **Send email notification:**
    The script sends an email notification with the log file content upon completion.
 
 ## Example Log Output
