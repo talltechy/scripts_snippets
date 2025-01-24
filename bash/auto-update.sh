@@ -41,6 +41,15 @@ validate_smtp_settings() {
     fi
 }
 
+# Function to validate email address format
+validate_email() {
+    if echo "$1" | grep -E -q "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Function to send email notification securely
 send_email() {
     SUBJECT="Alpine Linux Auto-Update Script Completion"
@@ -57,6 +66,12 @@ chmod 600 $LOGFILE
 
 # Create the .env file if it doesn't exist
 create_env_file
+
+# Validate email address
+if ! validate_email "$EMAIL"; then
+    log "Invalid email address: $EMAIL"
+    exit 1
+fi
 
 # Check if the script is running on Alpine Linux
 if [ -f /etc/alpine-release ]; then
