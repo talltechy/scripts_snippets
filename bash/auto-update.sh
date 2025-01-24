@@ -7,6 +7,14 @@ log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a $LOGFILE
 }
 
+# Check if the script is running on Alpine Linux
+if [ -f /etc/alpine-release ]; then
+    log "Running on Alpine Linux."
+else
+    log "This script is intended to be used on Alpine Linux only."
+    exit 1
+fi
+
 # Update the package list
 log "Starting package list update..."
 if apk update >> $LOGFILE 2>&1; then

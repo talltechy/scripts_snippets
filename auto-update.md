@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `auto-update.sh` script is designed to automate the process of updating and upgrading packages on an Alpine Linux system. It includes error handling and logging to ensure that each step is completed successfully and to provide detailed information about the process.
+The `auto-update.sh` script is designed to automate the process of updating and upgrading packages on an Alpine Linux system. It includes error handling and logging to ensure that each step is completed successfully and to provide detailed information about the process. The script also checks if it is running on Alpine Linux and exits if it is not.
 
 ## Usage
 
@@ -26,15 +26,21 @@ The `auto-update.sh` script is designed to automate the process of updating and 
 - **Error Handling:**
   If any step fails (updating the package list, upgrading packages, or cleaning the cache), the script logs the failure and exits with a non-zero status code.
 
+- **OS Check:**
+  The script checks if it is running on Alpine Linux by looking for the `/etc/alpine-release` file. If the file is not found, the script logs a message and exits.
+
 ## Script Steps
 
-1. **Update the package list:**
+1. **Check the operating system:**
+   The script verifies that it is running on Alpine Linux.
+
+2. **Update the package list:**
    The script runs `apk update` to refresh the list of available packages.
 
-2. **Upgrade all installed packages:**
+3. **Upgrade all installed packages:**
    The script runs `apk upgrade` to upgrade all installed packages to their latest versions.
 
-3. **Clean up the package cache:**
+4. **Clean up the package cache:**
    The script runs `apk cache clean` to remove any cached package files that are no longer needed.
 
 ## Example Log Output
@@ -42,6 +48,7 @@ The `auto-update.sh` script is designed to automate the process of updating and 
 Here is an example of what the log file might contain:
 
 ```log
+2023-10-01 12:00:00 - Running on Alpine Linux.
 2023-10-01 12:00:00 - Starting package list update...
 2023-10-01 12:00:05 - Package list update completed successfully.
 2023-10-01 12:00:05 - Starting package upgrade...
