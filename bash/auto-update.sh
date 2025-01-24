@@ -8,6 +8,7 @@ create_env_file() {
     if [ ! -f "$ENV_FILE" ]; then
         cat <<EOF > "$ENV_FILE"
 AUTO_UPDATE_EMAIL=""
+ENABLE_SMTP="false"
 
 # Optional settings for secure email relay
 SMTP_SERVER="smtp.example.com"
@@ -31,13 +32,22 @@ log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a $LOGFILE
 }
 
+# Function to validate SMTP settings
+validate_smtp_settings() {
+    if [ "$ENABLE_SMTP" = "true" ] && [ -n "$SMTP_SERVER" ] && [ -n "$SMTP_PORT" ] && [ -n "$SMTP_USER" ] && [ -n "$SMTP_PASSWORD" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Function to send email notification securely
 send_email() {
     SUBJECT="Alpine Linux Auto-Update Script Completion"
-    if [ -n "$SMTP_SERVER" ] && [ -n "$SMTP_PORT" ] && [ -n "$SMTP_USER" ] && [ -n "$SMTP_PASSWORD" ]; then
+    if validate_smtp_settings; then
         cat $LOGFILE | msmtp --host="$SMTP_SERVER" --port="$SMTP_PORT" --auth=on --user="$SMTP_USER" --passwordeval="echo $SMTP_PASSWORD" --tls=on --tls-starttls=on --subject="$SUBJECT" "$EMAIL"
     else
-        cat $LOGFILE | msmtp --subject="$SUBJECT" "$EMAIL"
+        log "SMTP settings are not valid or SMTP is disabled. Skipping email notification."
     fi
 }
 

@@ -16,6 +16,7 @@ The `auto-update.sh` script is designed to automate the process of updating and 
 
    ```sh
    AUTO_UPDATE_EMAIL=""
+   ENABLE_SMTP="false"
 
    # Optional settings for secure email relay
    SMTP_SERVER="smtp.example.com"
@@ -55,7 +56,7 @@ The `auto-update.sh` script is designed to automate the process of updating and 
   If any step fails (updating the package list, upgrading packages, or cleaning the cache), the script logs the failure, sends an email notification, and exits with a non-zero status code.
 
 - **Email Notification:**
-  The script sends an email notification with the log file content to a specified email address upon completion. The email address is set using the `AUTO_UPDATE_EMAIL` environment variable from the configuration file. If optional SMTP settings are provided, the script uses them to send the email via a secure email relay. If no email address is configured, the script defaults to sending the email to the root user locally. Ensure that `msmtp` or a similar secure email sending tool is installed and configured on your system.
+  The script sends an email notification with the log file content to a specified email address upon completion. The email address is set using the `AUTO_UPDATE_EMAIL` environment variable from the configuration file. If optional SMTP settings are provided and valid, and `ENABLE_SMTP` is set to `true`, the script uses them to send the email via a secure email relay. If no email address is configured or the SMTP settings are invalid, the script logs a warning and skips the email notification. Ensure that `msmtp` or a similar secure email sending tool is installed and configured on your system.
 
 - **OS Check:**
   The script checks if it is running on Alpine Linux by looking for the `/etc/alpine-release` file. If the file is not found, the script logs a message and exits.
@@ -81,7 +82,7 @@ The `auto-update.sh` script is designed to automate the process of updating and 
    The script runs `apk cache clean` to remove any cached package files that are no longer needed.
 
 6. **Send email notification:**
-   The script sends an email notification with the log file content upon completion.
+   The script sends an email notification with the log file content upon completion, if the SMTP settings are valid and `ENABLE_SMTP` is set to `true`.
 
 ## Example Log Output
 
@@ -96,11 +97,12 @@ Here is an example of what the log file might contain:
 2023-10-01 12:05:00 - Cleaning up package cache...
 2023-10-01 12:05:02 - Package cache cleaned successfully.
 2023-10-01 12:05:02 - System update and upgrade completed.
+2023-10-01 12:05:02 - SMTP settings are not valid or SMTP is disabled. Skipping email notification.
 ```
 
 ## Notes
 
 - Ensure that you have the necessary permissions to write to `/var/log/auto-update.log`.
 - You may need to run the script as root or with `sudo` to perform system updates and upgrades.
-- Set the `AUTO_UPDATE_EMAIL` environment variable in the configuration file.
+- Set the `AUTO_UPDATE_EMAIL` and `ENABLE_SMTP` environment variables in the configuration file.
 - Ensure that `msmtp` or a similar secure email sending tool is installed and configured on your system.
