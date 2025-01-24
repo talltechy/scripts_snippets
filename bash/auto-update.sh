@@ -1,18 +1,29 @@
 #!/bin/sh
 
+# Source environment variables from the configuration file
+. /Users/mattwyen/github/scripts_snippets/bash/auto-update.env
+
 LOGFILE="/var/log/auto-update.log"
-EMAIL="your-email@example.com"
+EMAIL="${AUTO_UPDATE_EMAIL}"
 
 # Function to log messages
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a $LOGFILE
 }
 
-# Function to send email notification
+# Function to send email notification securely
 send_email() {
     SUBJECT="Alpine Linux Auto-Update Script Completion"
-    mail -s "$SUBJECT" "$EMAIL" < $LOGFILE
+    if [ -n "$EMAIL" ]; then
+        cat $LOGFILE | msmtp --subject="$SUBJECT" "$EMAIL"
+    else
+        log "Email address not set. Skipping email notification."
+    fi
 }
+
+# Ensure log file has restricted permissions
+touch $LOGFILE
+chmod 600 $LOGFILE
 
 # Check if the script is running on Alpine Linux
 if [ -f /etc/alpine-release ]; then

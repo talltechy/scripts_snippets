@@ -6,6 +6,28 @@ The `auto-update.sh` script is designed to automate the process of updating and 
 
 ## Usage
 
+### Setting the Email Environment Variable
+
+#### Using a Configuration File
+
+1. **Create a configuration file:**
+
+   Create a file named `auto-update.env` in the `/Users/mattwyen/github/scripts_snippets/bash/` directory with the following content:
+
+   ```sh
+   AUTO_UPDATE_EMAIL="your-email@example.com"
+   ```
+
+2. **Secure the configuration file:**
+
+   Ensure the configuration file has restricted permissions:
+
+   ```sh
+   chmod 600 /Users/mattwyen/github/scripts_snippets/bash/auto-update.env
+   ```
+
+### Running the Script
+
 1. **Make the script executable:**
 
    ```sh
@@ -21,13 +43,13 @@ The `auto-update.sh` script is designed to automate the process of updating and 
 ## Script Details
 
 - **Logging:**
-  The script logs each step to `/var/log/auto-update.log`. This log file contains timestamps and messages indicating the success or failure of each operation.
+  The script logs each step to `/var/log/auto-update.log`. This log file contains timestamps and messages indicating the success or failure of each operation. The log file has restricted permissions to ensure security.
 
 - **Error Handling:**
   If any step fails (updating the package list, upgrading packages, or cleaning the cache), the script logs the failure, sends an email notification, and exits with a non-zero status code.
 
 - **Email Notification:**
-  The script sends an email notification with the log file content to a specified email address upon completion. Ensure that the `mail` command is installed and configured on your system. Update the `EMAIL` variable in the script with your email address.
+  The script sends an email notification with the log file content to a specified email address upon completion. The email address is set using the `AUTO_UPDATE_EMAIL` environment variable from the configuration file. Ensure that `msmtp` or a similar secure email sending tool is installed and configured on your system.
 
 - **OS Check:**
   The script checks if it is running on Alpine Linux by looking for the `/etc/alpine-release` file. If the file is not found, the script logs a message and exits.
@@ -68,5 +90,5 @@ Here is an example of what the log file might contain:
 
 - Ensure that you have the necessary permissions to write to `/var/log/auto-update.log`.
 - You may need to run the script as root or with `sudo` to perform system updates and upgrades.
-- Update the `EMAIL` variable in the script with your email address.
-- Ensure that the `mail` command is installed and configured on your system.
+- Set the `AUTO_UPDATE_EMAIL` environment variable in the configuration file.
+- Ensure that `msmtp` or a similar secure email sending tool is installed and configured on your system.
