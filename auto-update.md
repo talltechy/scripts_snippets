@@ -22,7 +22,7 @@ The `auto-update.sh` script is designed to automate the process of updating and 
    SMTP_SERVER="smtp.example.com"
    SMTP_PORT="587"
    SMTP_USER="your-smtp-username"
-   SMTP_PASSWORD="your-smtp-password"
+   SMTP_PASSWORD_ENCRYPTED="your-encrypted-smtp-password"
    ```
 
 2. **Secure the configuration file:**
@@ -32,6 +32,26 @@ The `auto-update.sh` script is designed to automate the process of updating and 
    ```sh
    chmod 600 /etc/auto-update.env
    ```
+
+3. **Encrypt the SMTP password:**
+
+   Use `gpg` to encrypt your SMTP password and store the encrypted password in the configuration file:
+
+   ```sh
+   echo "your-smtp-password" | gpg --symmetric --cipher-algo AES256
+   ```
+
+   Copy the output and set it as the value for `SMTP_PASSWORD_ENCRYPTED` in the configuration file.
+
+4. **Set the GPG passphrase:**
+
+   Securely set the GPG passphrase as an environment variable before running the script. You can do this in the shell session:
+
+   ```sh
+   export GPG_PASSPHRASE="your-gpg-passphrase"
+   ```
+
+   Alternatively, use a secrets management tool to securely store and retrieve the GPG passphrase.
 
 ### Running the Script
 
@@ -66,6 +86,9 @@ The `auto-update.sh` script is designed to automate the process of updating and 
 
 - **Input Validation:**
   The script validates the email address and SMTP settings to ensure they contain expected values before proceeding.
+
+- **GPG Encryption:**
+  The script uses `gpg` to decrypt the SMTP password before sending an email.
 
 ## Script Steps
 
@@ -112,3 +135,4 @@ Here is an example of what the log file might contain:
 - You may need to run the script as root or with `sudo` to perform system updates and upgrades.
 - Set the `AUTO_UPDATE_EMAIL` and `ENABLE_SMTP` environment variables in the configuration file.
 - Ensure that `msmtp` or a similar secure email sending tool is installed and configured on your system.
+- Use `gpg` to encrypt your SMTP password and set the `GPG_PASSPHRASE` environment variable securely.

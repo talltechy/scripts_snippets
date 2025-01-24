@@ -14,7 +14,7 @@ ENABLE_SMTP="false"
 SMTP_SERVER="smtp.example.com"
 SMTP_PORT="587"
 SMTP_USER="your-smtp-username"
-SMTP_PASSWORD="your-smtp-password"
+SMTP_PASSWORD_ENCRYPTED="your-encrypted-smtp-password"
 EOF
         chmod 600 "$ENV_FILE"
         log "Created default environment configuration file at $ENV_FILE"
@@ -44,7 +44,7 @@ validate_email() {
 # Function to validate SMTP settings
 validate_smtp_settings() {
     if [ "$ENABLE_SMTP" = "true" ]; then
-        if [ -z "$SMTP_SERVER" ] || [ -z "$SMTP_PORT" ] || [ -z "$SMTP_USER" ] || [ -z "$SMTP_PASSWORD" ]; then
+        if [ -z "$SMTP_SERVER" ] || [ -z "$SMTP_PORT" ] || [ -z "$SMTP_USER" ] || [ -z "$SMTP_PASSWORD_ENCRYPTED" ]; then
             return 1
         fi
         if ! echo "$SMTP_PORT" | grep -E -q "^[0-9]+$"; then
@@ -54,10 +54,16 @@ validate_smtp_settings() {
     return 0
 }
 
+# Function to decrypt SMTP password
+decrypt_smtp_password() {
+    echo "$SMTP_PASSWORD_ENCRYPTED" | gpg --decrypt --batch --yes --passphrase "$GPG_PASSPHRASE"
+}
+
 # Function to send email notification securely
 send_email() {
     SUBJECT="Alpine Linux Auto-Update Script Completion"
     if validate_smtp_settings; then
+        SMTP_PASSWORD=$(decrypt_smtp_password)
         cat $LOGFILE | msmtp --host="$SMTP_SERVER" --port="$SMTP_PORT" --auth=on --user="$SMTP_USER" --passwordeval="echo $SMTP_PASSWORD" --tls=on --tls-starttls=on --subject="$SUBJECT" "$EMAIL"
     else
         log "SMTP settings are not valid or SMTP is disabled. Skipping email notification."
