@@ -31,13 +31,13 @@ The `auto-update.sh` script is designed to automate the process of updating and 
 1. **Make the script executable:**
 
    ```sh
-   chmod +x /Users/mattwyen/github/scripts_snippets/bash/auto-update.sh
+   chmod +x /usr/local/bin/auto-update.sh
    ```
 
 2. **Run the script:**
 
    ```sh
-   /Users/mattwyen/github/scripts_snippets/bash/auto-update.sh
+   /usr/local/bin/auto-update.sh
    ```
 
 ## Script Details
