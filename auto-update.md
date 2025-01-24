@@ -51,6 +51,26 @@ The `auto-update.sh` script is designed to automate the process of updating and 
    pass insert auto-update/gpg-passphrase
    ```
 
+### Installing `pass` on Alpine Linux
+
+1. **Update the package list:**
+
+   ```sh
+   sudo apk update
+   ```
+
+2. **Install `pass`:**
+
+   ```sh
+   sudo apk add pass
+   ```
+
+3. **Initialize `pass` with your GPG key:**
+
+   ```sh
+   pass init "your-gpg-key-id"
+   ```
+
 ### Running the Script
 
 1. **Make the script executable:**
