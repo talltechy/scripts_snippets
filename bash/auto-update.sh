@@ -54,9 +54,14 @@ validate_smtp_settings() {
     return 0
 }
 
+# Function to retrieve GPG passphrase from pass
+retrieve_gpg_passphrase() {
+    pass show auto-update/gpg-passphrase
+}
+
 # Function to decrypt SMTP password
 decrypt_smtp_password() {
-    echo "$SMTP_PASSWORD_ENCRYPTED" | gpg --decrypt --batch --yes --passphrase "$GPG_PASSPHRASE"
+    echo "$SMTP_PASSWORD_ENCRYPTED" | gpg --decrypt --batch --yes --passphrase "$(retrieve_gpg_passphrase)"
 }
 
 # Function to send email notification securely
