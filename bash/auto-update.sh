@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Source environment variables from the configuration file
-. /Users/mattwyen/github/scripts_snippets/bash/auto-update.env
+. /etc/auto-update.env
 
 LOGFILE="/var/log/auto-update.log"
 EMAIL="${AUTO_UPDATE_EMAIL}"

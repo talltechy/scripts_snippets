@@ -12,7 +12,7 @@ The `auto-update.sh` script is designed to automate the process of updating and 
 
 1. **Create a configuration file:**
 
-   Create a file named `auto-update.env` in the `/Users/mattwyen/github/scripts_snippets/bash/` directory with the following content:
+   Create a file named `auto-update.env` in the `/etc/` directory with the following content:
 
    ```sh
    AUTO_UPDATE_EMAIL="your-email@example.com"
@@ -23,7 +23,7 @@ The `auto-update.sh` script is designed to automate the process of updating and 
    Ensure the configuration file has restricted permissions:
 
    ```sh
-   chmod 600 /Users/mattwyen/github/scripts_snippets/bash/auto-update.env
+   chmod 600 /etc/auto-update.env
    ```
 
 ### Running the Script
