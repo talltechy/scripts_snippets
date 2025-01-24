@@ -16,6 +16,12 @@ The `auto-update.sh` script is designed to automate the process of updating and 
 
    ```sh
    AUTO_UPDATE_EMAIL="your-email@example.com"
+
+   # Optional settings for secure email relay
+   SMTP_SERVER="smtp.example.com"
+   SMTP_PORT="587"
+   SMTP_USER="your-smtp-username"
+   SMTP_PASSWORD="your-smtp-password"
    ```
 
 2. **Secure the configuration file:**
@@ -49,7 +55,7 @@ The `auto-update.sh` script is designed to automate the process of updating and 
   If any step fails (updating the package list, upgrading packages, or cleaning the cache), the script logs the failure, sends an email notification, and exits with a non-zero status code.
 
 - **Email Notification:**
-  The script sends an email notification with the log file content to a specified email address upon completion. The email address is set using the `AUTO_UPDATE_EMAIL` environment variable from the configuration file. Ensure that `msmtp` or a similar secure email sending tool is installed and configured on your system.
+  The script sends an email notification with the log file content to a specified email address upon completion. The email address is set using the `AUTO_UPDATE_EMAIL` environment variable from the configuration file. If optional SMTP settings are provided, the script uses them to send the email via a secure email relay. Ensure that `msmtp` or a similar secure email sending tool is installed and configured on your system.
 
 - **OS Check:**
   The script checks if it is running on Alpine Linux by looking for the `/etc/alpine-release` file. If the file is not found, the script logs a message and exits.

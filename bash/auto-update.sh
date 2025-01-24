@@ -15,7 +15,11 @@ log() {
 send_email() {
     SUBJECT="Alpine Linux Auto-Update Script Completion"
     if [ -n "$EMAIL" ]; then
-        cat $LOGFILE | msmtp --subject="$SUBJECT" "$EMAIL"
+        if [ -n "$SMTP_SERVER" ] && [ -n "$SMTP_PORT" ] && [ -n "$SMTP_USER" ] && [ -n "$SMTP_PASSWORD" ]; then
+            cat $LOGFILE | msmtp --host="$SMTP_SERVER" --port="$SMTP_PORT" --auth=on --user="$SMTP_USER" --passwordeval="echo $SMTP_PASSWORD" --tls=on --tls-starttls=on --subject="$SUBJECT" "$EMAIL"
+        else
+            cat $LOGFILE | msmtp --subject="$SUBJECT" "$EMAIL"
+        fi
     else
         log "Email address not set. Skipping email notification."
     fi
