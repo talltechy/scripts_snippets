@@ -32,15 +32,6 @@ log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a $LOGFILE
 }
 
-# Function to validate SMTP settings
-validate_smtp_settings() {
-    if [ "$ENABLE_SMTP" = "true" ] && [ -n "$SMTP_SERVER" ] && [ -n "$SMTP_PORT" ] && [ -n "$SMTP_USER" ] && [ -n "$SMTP_PASSWORD" ]; then
-        return 0
-    else
-        return 1
-    fi
-}
-
 # Function to validate email address format
 validate_email() {
     if echo "$1" | grep -E -q "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"; then
@@ -48,6 +39,19 @@ validate_email() {
     else
         return 1
     fi
+}
+
+# Function to validate SMTP settings
+validate_smtp_settings() {
+    if [ "$ENABLE_SMTP" = "true" ]; then
+        if [ -z "$SMTP_SERVER" ] || [ -z "$SMTP_PORT" ] || [ -z "$SMTP_USER" ] || [ -z "$SMTP_PASSWORD" ]; then
+            return 1
+        fi
+        if ! echo "$SMTP_PORT" | grep -E -q "^[0-9]+$"; then
+            return 1
+        fi
+    fi
+    return 0
 }
 
 # Function to send email notification securely
@@ -70,6 +74,12 @@ create_env_file
 # Validate email address
 if ! validate_email "$EMAIL"; then
     log "Invalid email address: $EMAIL"
+    exit 1
+fi
+
+# Validate SMTP settings
+if ! validate_smtp_settings; then
+    log "Invalid SMTP settings."
     exit 1
 fi
 

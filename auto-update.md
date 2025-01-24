@@ -64,6 +64,9 @@ The `auto-update.sh` script is designed to automate the process of updating and 
 - **Auto-Generate .env File:**
   If the `/etc/auto-update.env` file does not exist, the script will create it with default values and set the appropriate permissions.
 
+- **Input Validation:**
+  The script validates the email address and SMTP settings to ensure they contain expected values before proceeding.
+
 ## Script Steps
 
 1. **Check the operating system:**
@@ -72,16 +75,19 @@ The `auto-update.sh` script is designed to automate the process of updating and 
 2. **Auto-generate the .env file:**
    If the `/etc/auto-update.env` file does not exist, the script creates it with default values.
 
-3. **Update the package list:**
+3. **Validate input:**
+   The script validates the email address and SMTP settings.
+
+4. **Update the package list:**
    The script runs `apk update` to refresh the list of available packages.
 
-4. **Upgrade all installed packages:**
+5. **Upgrade all installed packages:**
    The script runs `apk upgrade` to upgrade all installed packages to their latest versions.
 
-5. **Clean up the package cache:**
+6. **Clean up the package cache:**
    The script runs `apk cache clean` to remove any cached package files that are no longer needed.
 
-6. **Send email notification:**
+7. **Send email notification:**
    The script sends an email notification with the log file content upon completion, if the SMTP settings are valid and `ENABLE_SMTP` is set to `true`.
 
 ## Example Log Output
