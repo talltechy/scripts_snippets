@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `auto-update.sh` script is designed to automate the process of updating and upgrading packages on an Alpine Linux system. It includes error handling and logging to ensure that each step is completed successfully and to provide detailed information about the process. The script also checks if it is running on Alpine Linux and exits if it is not.
+The `auto-update.sh` script is designed to automate the process of updating and upgrading packages on an Alpine Linux system. It includes error handling, logging, and email notifications to ensure that each step is completed successfully and to provide detailed information about the process. The script also checks if it is running on Alpine Linux and exits if it is not.
 
 ## Usage
 
@@ -24,7 +24,10 @@ The `auto-update.sh` script is designed to automate the process of updating and 
   The script logs each step to `/var/log/auto-update.log`. This log file contains timestamps and messages indicating the success or failure of each operation.
 
 - **Error Handling:**
-  If any step fails (updating the package list, upgrading packages, or cleaning the cache), the script logs the failure and exits with a non-zero status code.
+  If any step fails (updating the package list, upgrading packages, or cleaning the cache), the script logs the failure, sends an email notification, and exits with a non-zero status code.
+
+- **Email Notification:**
+  The script sends an email notification with the log file content to a specified email address upon completion. Ensure that the `mail` command is installed and configured on your system. Update the `EMAIL` variable in the script with your email address.
 
 - **OS Check:**
   The script checks if it is running on Alpine Linux by looking for the `/etc/alpine-release` file. If the file is not found, the script logs a message and exits.
@@ -42,6 +45,9 @@ The `auto-update.sh` script is designed to automate the process of updating and 
 
 4. **Clean up the package cache:**
    The script runs `apk cache clean` to remove any cached package files that are no longer needed.
+
+5. **Send email notification:**
+   The script sends an email notification with the log file content upon completion.
 
 ## Example Log Output
 
@@ -62,3 +68,5 @@ Here is an example of what the log file might contain:
 
 - Ensure that you have the necessary permissions to write to `/var/log/auto-update.log`.
 - You may need to run the script as root or with `sudo` to perform system updates and upgrades.
+- Update the `EMAIL` variable in the script with your email address.
+- Ensure that the `mail` command is installed and configured on your system.

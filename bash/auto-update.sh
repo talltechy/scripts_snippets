@@ -1,10 +1,17 @@
 #!/bin/sh
 
 LOGFILE="/var/log/auto-update.log"
+EMAIL="your-email@example.com"
 
 # Function to log messages
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a $LOGFILE
+}
+
+# Function to send email notification
+send_email() {
+    SUBJECT="Alpine Linux Auto-Update Script Completion"
+    mail -s "$SUBJECT" "$EMAIL" < $LOGFILE
 }
 
 # Check if the script is running on Alpine Linux
@@ -21,6 +28,7 @@ if apk update >> $LOGFILE 2>&1; then
     log "Package list update completed successfully."
 else
     log "Package list update failed."
+    send_email
     exit 1
 fi
 
@@ -30,6 +38,7 @@ if apk upgrade >> $LOGFILE 2>&1; then
     log "Package upgrade completed successfully."
 else
     log "Package upgrade failed."
+    send_email
     exit 1
 fi
 
@@ -39,7 +48,9 @@ if apk cache clean >> $LOGFILE 2>&1; then
     log "Package cache cleaned successfully."
 else
     log "Package cache clean failed."
+    send_email
     exit 1
 fi
 
 log "System update and upgrade completed."
+send_email
