@@ -5,6 +5,45 @@ All notable changes to the `create_admin_user.sh` script will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2025-07-23
+
+### Added
+
+- **Enhanced Visual Experience**: Complete beautification and user-friendly interface overhaul
+  - Color-coded output with ANSI color support for different message types
+  - Beautiful Unicode box drawing characters for headers and sections
+  - Progress bars with visual indicators (█ and ░ characters)
+  - Enhanced status symbols: ✅ ✗ ⚠️ 🔍 ❌ ℹ️ 💡
+  - Step-by-step progress tracking with numbered indicators
+  - Animated spinner support for long-running operations
+
+- **Improved User Guidance**: Enhanced feedback and tooltips throughout execution
+  - Configuration summary box with clear visual formatting
+  - Contextual tips and warnings with appropriate visual cues
+  - Enhanced error messages with actionable guidance
+  - Post-setup instructions with clear next steps
+  - Security reminders with visual emphasis
+
+- **Better Information Architecture**: Organized output with clear visual hierarchy
+  - Sectioned output with headers and dividers
+  - Progress tracking showing current step and total steps
+  - Enhanced dry-run output with clear "would do" messaging
+  - Improved validation feedback with detailed status reporting
+
+### Changed
+
+- **Enhanced Output Formatting**: All script output now uses consistent visual formatting
+  - Replaced plain text messages with color-coded, symbol-enhanced output
+  - Added visual progress indicators for multi-step operations
+  - Improved error and warning display with appropriate colors and symbols
+  - Enhanced success messages with clear visual confirmation
+
+- **User Experience Improvements**: More intuitive and professional appearance
+  - Better visual separation between different phases of execution
+  - Clear indication of current operation and progress
+  - Enhanced readability with proper spacing and formatting
+  - Professional appearance suitable for enterprise environments
+
 ## [2.1.0] - 2025-07-23
 
 ### Added
@@ -225,7 +264,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Future Planned Features
 
-### Roadmap for v2.1.0
+### Roadmap for v2.2.0
 
 - [ ] SSH configuration hardening options
 - [ ] Interactive confirmation for destructive operations
@@ -233,12 +272,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [ ] Multiple SSH key format support
 - [ ] Configuration file support for default settings
 
-### Roadmap for v2.2.0
+### Roadmap for v2.3.0
 
 - [ ] User group management beyond sudo
 - [ ] SSH key distribution to remote servers
 - [ ] Integration with configuration management tools
-- [ ] Dry-run mode for testing
+- [ ] Advanced dry-run mode for testing
 
 ### Security Enhancements Under Consideration
 

@@ -2,9 +2,36 @@
 set -euo pipefail
 
 # --- Script Information ---
-SCRIPT_VERSION="2.1.0"
+SCRIPT_VERSION="2.1.1"
 SCRIPT_NAME="create_admin_user.sh"
 LAST_UPDATED="2025-07-23"
+
+# --- Color Definitions ---
+if [[ -t 1 ]]; then
+    # Colors for terminal output
+    readonly RED='\033[0;31m'
+    readonly GREEN='\033[0;32m'
+    readonly YELLOW='\033[1;33m'
+    readonly BLUE='\033[0;34m'
+    readonly PURPLE='\033[0;35m'
+    readonly CYAN='\033[0;36m'
+    readonly WHITE='\033[1;37m'
+    readonly BOLD='\033[1m'
+    readonly DIM='\033[2m'
+    readonly NC='\033[0m' # No Color
+else
+    # No colors for non-terminal output
+    readonly RED=''
+    readonly GREEN=''
+    readonly YELLOW=''
+    readonly BLUE=''
+    readonly PURPLE=''
+    readonly CYAN=''
+    readonly WHITE=''
+    readonly BOLD=''
+    readonly DIM=''
+    readonly NC=''
+fi
 
 # --- Configurable variables ---
 DEFAULT_USERNAME="talltechy"
@@ -44,12 +71,92 @@ get_sudo_template() {
     esac
 }
 
+# --- Enhanced Display Functions ---
+print_header() {
+    local title="$1"
+    local width=60
+    echo -e "\n${CYAN}╔$(printf '═%.0s' $(seq 1 $((width-2))))╗${NC}"
+    printf "${CYAN}║${BOLD}%*s%*s${NC}${CYAN}║${NC}\n" $(((width + ${#title}) / 2)) "$title" $(((width - ${#title}) / 2)) ""
+    echo -e "${CYAN}╚$(printf '═%.0s' $(seq 1 $((width-2))))╝${NC}\n"
+}
+
+print_section() {
+    local title="$1"
+    echo -e "\n${BLUE}▶ ${BOLD}$title${NC}"
+    echo -e "${BLUE}$(printf '─%.0s' $(seq 1 ${#title}))${NC}"
+}
+
+print_step() {
+    local step="$1"
+    local description="$2"
+    echo -e "${PURPLE}[$step]${NC} $description"
+}
+
+print_success() {
+    local message="$1"
+    echo -e "${GREEN}✅ $message${NC}"
+}
+
+print_warning() {
+    local message="$1"
+    echo -e "${YELLOW}⚠️  $message${NC}"
+}
+
+print_error() {
+    local message="$1"
+    echo -e "${RED}❌ $message${NC}" >&2
+}
+
+print_info() {
+    local message="$1"
+    echo -e "${BLUE}ℹ️  $message${NC}"
+}
+
+print_tip() {
+    local message="$1"
+    echo -e "${CYAN}💡 ${DIM}Tip: $message${NC}"
+}
+
+show_progress() {
+    local current="$1"
+    local total="$2"
+    local description="$3"
+    local width=40
+    local percentage=$((current * 100 / total))
+    local filled=$((current * width / total))
+    local empty=$((width - filled))
+    
+    printf "\r${BLUE}Progress: [${GREEN}"
+    printf "%*s" $filled | tr ' ' '█'
+    printf "${BLUE}"
+    printf "%*s" $empty | tr ' ' '░'
+    printf "${BLUE}] ${BOLD}%d%%${NC} - %s" $percentage "$description"
+    
+    if [[ $current -eq $total ]]; then
+        echo ""
+    fi
+}
+
+spinner() {
+    local pid=$1
+    local message="$2"
+    local spin='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+    local i=0
+    
+    while kill -0 $pid 2>/dev/null; do
+        i=$(( (i+1) %10 ))
+        printf "\r${BLUE}${spin:$i:1} $message${NC}"
+        sleep 0.1
+    done
+    printf "\r"
+}
+
 # --- Functions ---
 log() {
     local msg="$1"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     if [[ "$DRY_RUN" == "true" ]]; then
-        echo "[DRY-RUN] $timestamp - $msg"
+        echo -e "${DIM}[DRY-RUN] $timestamp - $msg${NC}"
     else
         echo "$timestamp - $msg" | tee -a "$LOG_FILE" > /dev/null
     fi
@@ -526,10 +633,15 @@ done
 
 # --- Main script execution ---
 
+# Show header
+print_header "Admin User Creation Script v$SCRIPT_VERSION"
+
 # Load configuration if specified
 if [[ -n "$CONFIG_FILE" ]]; then
+    print_info "Loading configuration from: $CONFIG_FILE"
     load_config "$CONFIG_FILE"
 elif [[ -f "$DEFAULT_CONFIG_FILE" ]]; then
+    print_info "Loading default configuration from: $DEFAULT_CONFIG_FILE"
     load_config "$DEFAULT_CONFIG_FILE"
 fi
 
@@ -537,22 +649,52 @@ fi
 USERNAME="${USERNAME:-$DEFAULT_USERNAME}"
 
 # Validate inputs
+print_section "Input Validation"
+print_step "1/2" "Validating username: $USERNAME"
 validate_username "$USERNAME"
+print_success "Username validation passed"
+
+print_step "2/2" "Validating sudo level: $SUDO_LEVEL"
 validate_sudo_level "$SUDO_LEVEL"
+print_success "Sudo level validation passed"
 
 # Handle special modes
 if [[ "$VALIDATE_ONLY" == "true" ]]; then
+    print_section "Prerequisites Validation"
     validate_prerequisites
     exit $?
 fi
 
 if [[ "$TEST_SETUP" == "true" ]]; then
+    print_section "Testing User Setup"
     test_user_setup "$USERNAME"
     exit $?
 fi
 
 # Require root for actual operations
 require_root
+
+# Show configuration summary
+print_section "Configuration Summary"
+echo -e "${BLUE}┌─ User Configuration ─────────────────────────────────┐${NC}"
+echo -e "${BLUE}│${NC} Username:           ${BOLD}$USERNAME${NC}"
+echo -e "${BLUE}│${NC} Sudo Level:         ${BOLD}$SUDO_LEVEL${NC}"
+if [[ -n "$CUSTOM_SUDO_COMMANDS" ]]; then
+    echo -e "${BLUE}│${NC} Custom Commands:    ${BOLD}$CUSTOM_SUDO_COMMANDS${NC}"
+fi
+echo -e "${BLUE}│${NC} Require Passphrase: ${BOLD}$REQUIRE_PASSPHRASE${NC}"
+echo -e "${BLUE}│${NC} Dry Run:            ${BOLD}$DRY_RUN${NC}"
+echo -e "${BLUE}│${NC} Non-Interactive:    ${BOLD}$NON_INTERACTIVE${NC}"
+echo -e "${BLUE}└──────────────────────────────────────────────────────┘${NC}"
+
+if [[ "$SUDO_LEVEL" == "full" ]]; then
+    print_warning "Full sudo access grants complete system control!"
+    print_tip "Consider using 'admin' level for most administrative tasks"
+fi
+
+if [[ "$DRY_RUN" == "true" ]]; then
+    print_info "Running in DRY-RUN mode - no changes will be made"
+fi
 
 # Set up paths
 SSH_DIR="/home/$USERNAME/.ssh"
@@ -579,158 +721,219 @@ if [[ "$DRY_RUN" == "false" ]]; then
 fi
 
 # Clean up old backups
+print_section "System Preparation"
+print_step "1/2" "Cleaning up old backups (older than $BACKUP_RETENTION_DAYS days)"
 cleanup_old_backups
+print_success "Backup cleanup completed"
 
-# Add user and handle password
+print_step "2/2" "Initializing backup directory: $BACKUP_DIR"
+if [[ "$DRY_RUN" == "false" ]]; then
+    mkdir -p "$BACKUP_DIR"
+    log "Created backup directory: $BACKUP_DIR"
+    
+    # Set restrictive permissions on log file
+    touch "$LOG_FILE"
+    chmod 600 "$LOG_FILE"
+fi
+print_success "Backup directory ready"
+
+# Main setup process with progress tracking
+print_section "User Setup Process"
+TOTAL_STEPS=6
+CURRENT_STEP=0
+
+# Step 1: Add user and handle password
+((CURRENT_STEP++))
+show_progress $CURRENT_STEP $TOTAL_STEPS "Creating user account"
 if id "$USERNAME" &>/dev/null; then
+    print_info "User $USERNAME already exists - skipping creation"
     log "User $USERNAME already exists. Skipping user creation."
 else
     if [[ "$DRY_RUN" == "true" ]]; then
+        print_info "Would create user $USERNAME"
         log "Would create user $USERNAME"
     elif [[ "$NON_INTERACTIVE" == "true" ]]; then
         if [[ -n "$PASSWORD_HASH" ]]; then
             if ! useradd -m -p "$PASSWORD_HASH" "$USERNAME"; then
+                print_error "Failed to create user with password hash"
                 cleanup_on_failure "$USERNAME" "user_creation"
                 exit 1
             fi
         else
             # Create user with disabled password for non-interactive mode
             if ! useradd -m "$USERNAME"; then
+                print_error "Failed to create user account"
                 cleanup_on_failure "$USERNAME" "user_creation"
                 exit 1
             fi
             passwd -l "$USERNAME"  # Lock password
         fi
+        print_success "User $USERNAME created (non-interactive mode)"
         log "User $USERNAME created (non-interactive mode)."
     else
+        print_info "Creating user $USERNAME (interactive mode - follow prompts)"
         if ! adduser "$USERNAME"; then
+            print_error "Failed to create user account"
             log "Failed to add user."
             cleanup_on_failure "$USERNAME" "user_creation"
             exit 1
         fi
+        print_success "User $USERNAME created successfully"
         log "User $USERNAME created."
     fi
 fi
 
-# Add user to sudo group
+# Step 2: Add user to sudo group
+((CURRENT_STEP++))
+show_progress $CURRENT_STEP $TOTAL_STEPS "Adding user to sudo group"
 if [[ "$DRY_RUN" == "true" ]]; then
+    print_info "Would add user $USERNAME to sudo group"
     log "Would add user $USERNAME to sudo group"
 else
     if ! usermod -aG sudo "$USERNAME"; then
+        print_error "Failed to add user to sudo group"
         log "Failed to add user to sudo group."
         cleanup_on_failure "$USERNAME" "sudo_group"
         exit 1
     fi
+    print_success "User $USERNAME added to sudo group"
     log "User $USERNAME added to sudo group."
 fi
 
-# Configure sudo permissions
+# Step 3: Configure sudo permissions
+((CURRENT_STEP++))
+show_progress $CURRENT_STEP $TOTAL_STEPS "Configuring sudo permissions"
 backup_file "$SUDOERS_FILE"
 SUDOERS_LINE=$(generate_sudo_config "$USERNAME" "$SUDO_LEVEL" "$CUSTOM_SUDO_COMMANDS")
 
 if [[ "$DRY_RUN" == "true" ]]; then
+    print_info "Would configure sudo with: $SUDOERS_LINE"
     log "Would configure sudo with: $SUDOERS_LINE"
 else
     echo "$SUDOERS_LINE" > "$SUDOERS_FILE"
     chmod 0440 "$SUDOERS_FILE"
     if ! visudo -cf "$SUDOERS_FILE"; then
+        print_error "Sudoers file syntax validation failed"
         log "Sudoers file syntax error. Removing $SUDOERS_FILE for safety."
         rm -f "$SUDOERS_FILE"
         cleanup_on_failure "$USERNAME" "sudoers_config"
         exit 1
     fi
+    print_success "Sudo permissions configured ($SUDO_LEVEL level)"
     log "Sudo configured for $USERNAME with level: $SUDO_LEVEL"
     
     # Warn about full access
     if [[ "$SUDO_LEVEL" == "full" ]]; then
-        echo "⚠️  WARNING: User $USERNAME has FULL sudo access (NOPASSWD:ALL)"
-        echo "   This grants complete system control. Consider using a more restrictive level."
+        print_warning "User $USERNAME has FULL sudo access (NOPASSWD:ALL)"
+        print_tip "This grants complete system control - consider using a more restrictive level"
         log "WARNING: Full sudo access granted to $USERNAME"
     fi
 fi
 
-# Create .ssh directory with correct permissions
+# Step 4: Create SSH directory and backup existing keys
+((CURRENT_STEP++))
+show_progress $CURRENT_STEP $TOTAL_STEPS "Setting up SSH directory"
 if [[ "$DRY_RUN" == "true" ]]; then
+    print_info "Would create SSH directory $SSH_DIR with permissions 700"
     log "Would create SSH directory $SSH_DIR with permissions 700"
 else
     mkdir -p "$SSH_DIR"
     chown "$USERNAME:$USERNAME" "$SSH_DIR"
     chmod 700 "$SSH_DIR"
+    print_success "SSH directory created with secure permissions"
 fi
 
 # Backup existing SSH keys if present
+print_info "Backing up existing SSH keys (if any)"
 backup_file "$KEY_PATH"
 backup_file "${KEY_PATH}.pub"
 
-# Handle SSH key generation or import
+# Step 5: Handle SSH key generation or import
+((CURRENT_STEP++))
+show_progress $CURRENT_STEP $TOTAL_STEPS "Generating/importing SSH keys"
+
 if [[ -n "$SSH_PUBKEY" ]]; then
     # Import existing public key
     if [[ "$DRY_RUN" == "true" ]]; then
+        print_info "Would import provided SSH public key"
         log "Would import provided SSH public key"
     else
         echo "$SSH_PUBKEY" > "${KEY_PATH}.pub"
         chmod 644 "${KEY_PATH}.pub"
         chown "$USERNAME:$USERNAME" "${KEY_PATH}.pub"
+        print_success "SSH public key imported successfully"
         log "Imported SSH public key for $USERNAME"
     fi
 elif sudo -u "$USERNAME" test -f "$KEY_PATH" 2>/dev/null; then
+    print_info "SSH key already exists - skipping generation"
     log "SSH key already exists at $KEY_PATH. Skipping key generation."
     check_key_expiry "$KEY_PATH" "$USERNAME"
 else
     # Generate new SSH key
     if [[ "$DRY_RUN" == "true" ]]; then
+        print_info "Would generate Ed25519 SSH key for $USERNAME"
         log "Would generate SSH key for $USERNAME"
     else
         if [[ "$NON_INTERACTIVE" == "true" ]]; then
             # Non-interactive key generation
             if [[ "$REQUIRE_PASSPHRASE" == "true" && "$ALLOW_NO_PASSPHRASE" == "false" ]]; then
-                echo "ERROR: Non-interactive mode requires --allow-no-passphrase when passphrase is required" >&2
+                print_error "Non-interactive mode requires --allow-no-passphrase when passphrase is required"
                 cleanup_on_failure "$USERNAME" "ssh_key_generation"
                 exit 1
             fi
             if ! sudo -u "$USERNAME" ssh-keygen -t ed25519 -C "$USERNAME@$(hostname)" -f "$KEY_PATH" -N ""; then
+                print_error "SSH key generation failed"
                 log "SSH key generation failed."
                 cleanup_on_failure "$USERNAME" "ssh_key_generation"
                 exit 1
             fi
+            print_success "SSH key generated (non-interactive mode, no passphrase)"
             log "SSH key generated for $USERNAME (no passphrase - non-interactive mode)"
         else
             # Interactive key generation
             if [[ "$REQUIRE_PASSPHRASE" == "true" && "$ALLOW_NO_PASSPHRASE" == "false" ]]; then
-                echo "Generating SSH key for $USERNAME. A passphrase is REQUIRED for security."
+                print_info "Generating SSH key for $USERNAME - passphrase REQUIRED for security"
                 echo "Please enter a strong passphrase when prompted."
             else
-                echo "Generating SSH key for $USERNAME. You will be prompted for a passphrase (recommended)."
+                print_info "Generating SSH key for $USERNAME - passphrase recommended"
+                echo "You will be prompted for a passphrase (recommended for security)."
             fi
             
             if ! sudo -u "$USERNAME" ssh-keygen -t ed25519 -C "$USERNAME@$(hostname)" -f "$KEY_PATH"; then
+                print_error "SSH key generation failed"
                 log "SSH key generation failed."
                 cleanup_on_failure "$USERNAME" "ssh_key_generation"
                 exit 1
             fi
-            log "SSH key generated for $USERNAME."
             
             # Check if passphrase was set
             if sudo -u "$USERNAME" ssh-keygen -y -P "" -f "$KEY_PATH" &>/dev/null; then
                 if [[ "$REQUIRE_PASSPHRASE" == "true" && "$ALLOW_NO_PASSPHRASE" == "false" ]]; then
-                    echo "ERROR: SSH key was generated without a passphrase, but passphrase is required." >&2
+                    print_error "SSH key generated without passphrase, but passphrase is required"
                     echo "Please regenerate the key with a passphrase or use --allow-no-passphrase flag." >&2
                     cleanup_on_failure "$USERNAME" "ssh_key_generation"
                     exit 1
                 else
-                    echo "⚠️  WARNING: SSH key was generated without a passphrase."
-                    echo "   Consider regenerating with a passphrase for better security."
+                    print_warning "SSH key generated without passphrase"
+                    print_tip "Consider regenerating with a passphrase for better security"
                     log "WARNING: SSH key generated without passphrase for $USERNAME"
                 fi
             else
+                print_success "SSH key generated with passphrase protection"
                 log "SSH key generated with passphrase for $USERNAME"
             fi
         fi
     fi
 fi
 
+# Step 6: Configure SSH key permissions and authorized_keys
+((CURRENT_STEP++))
+show_progress $CURRENT_STEP $TOTAL_STEPS "Finalizing SSH configuration"
+
 # Set permissions for SSH keys
-if [[ "$DRY_RUN" == "false" ]]; then
+if [[ "$DRY_RUN" == "true" ]]; then
+    print_info "Would set secure permissions on SSH keys"
+else
     if [[ -f "$KEY_PATH" ]]; then
         chmod 600 "$KEY_PATH"
         chown "$USERNAME:$USERNAME" "$KEY_PATH"
@@ -739,20 +942,24 @@ if [[ "$DRY_RUN" == "false" ]]; then
         chmod 644 "${KEY_PATH}.pub"
         chown "$USERNAME:$USERNAME" "${KEY_PATH}.pub"
     fi
+    print_success "SSH key permissions configured securely"
 fi
 
 # Add public key to authorized_keys if not already present
 AUTHORIZED_KEYS="$SSH_DIR/authorized_keys"
 if [[ "$DRY_RUN" == "true" ]]; then
+    print_info "Would configure authorized_keys file"
     log "Would configure authorized_keys file"
 elif [[ -f "${KEY_PATH}.pub" ]]; then
     if [[ -f "$AUTHORIZED_KEYS" ]] && grep -q -F "$(cat ${KEY_PATH}.pub)" "$AUTHORIZED_KEYS" 2>/dev/null; then
+        print_info "Public key already in authorized_keys"
         log "Public key already in authorized_keys."
     else
         touch "$AUTHORIZED_KEYS"
         cat "${KEY_PATH}.pub" >> "$AUTHORIZED_KEYS"
         chmod 600 "$AUTHORIZED_KEYS"
         chown "$USERNAME:$USERNAME" "$AUTHORIZED_KEYS"
+        print_success "Public key added to authorized_keys"
         log "Public key added to authorized_keys."
     fi
 fi
