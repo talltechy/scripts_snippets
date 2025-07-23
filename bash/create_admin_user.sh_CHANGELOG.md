@@ -104,10 +104,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Cross-Platform Compatibility**: Improved compatibility across Linux distributions
+- **Cross-Platform Compatibility**: Improved compatibility across Linux distributions and bash versions
   - Better handling of different user creation commands
   - Enhanced OS detection and command availability checking
   - Improved error handling for missing system commands
+  - **Bash 3.x Compatibility**: Replaced associative arrays with functions for older bash versions
 
 - **Edge Case Handling**: Comprehensive handling of edge cases and error conditions
   - Better handling of existing users and partial configurations

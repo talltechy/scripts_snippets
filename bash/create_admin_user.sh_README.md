@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-CC0--1.0-green.svg)](#-license)
-[![Bash](https://img.shields.io/badge/bash-4.0%2B-orange.svg)](https://www.gnu.org/software/bash/)
+[![Bash](https://img.shields.io/badge/bash-3.0%2B-orange.svg)](https://www.gnu.org/software/bash/)
 [![Security](https://img.shields.io/badge/security-enhanced-brightgreen.svg)](#-security-features)
 
 A comprehensive, security-focused bash script for creating administrative users with granular sudo permissions, SSH key authentication, and enterprise-grade automation support on Linux systems.
@@ -33,7 +33,7 @@ A comprehensive, security-focused bash script for creating administrative users 
 ## 📋 Requirements
 
 - **Operating System**: Linux (Ubuntu, Debian, CentOS, RHEL, etc.)
-- **Shell**: Bash 4.0 or higher
+- **Shell**: Bash 3.0 or higher (compatible with older systems)
 - **Privileges**: Must be run as root
 - **Dependencies**: `adduser`, `usermod`, `ssh-keygen`, `visudo`
 
@@ -43,7 +43,7 @@ A comprehensive, security-focused bash script for creating administrative users 
 
 ```bash
 # Download the script
-curl -O https://raw.githubusercontent.com/yourusername/your-repo/main/create_admin_user.sh
+curl -O https://raw.githubusercontent.com/talltechy/scripts_snippets/main/bash/create_admin_user.sh
 
 # Make it executable
 chmod +x create_admin_user.sh
@@ -56,8 +56,8 @@ sudo ./create_admin_user.sh
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/your-repo.git
-cd your-repo
+git clone https://github.com/talltechy/scripts_snippets.git
+cd scripts_snippets/bash
 
 # Make the script executable
 chmod +x create_admin_user.sh
@@ -312,7 +312,9 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed version history and feature additi
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the CC0 1.0 Universal License - see the [LICENSE.md](../LICENSE.md) file for details.
+
+This means the code is in the public domain and you can use it for any purpose without restriction.
 
 ## ⚠️ Disclaimer
 
@@ -325,15 +327,15 @@ This script modifies system user accounts and sudo configurations. Always:
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/your-repo/issues)
-- **Documentation**: [Wiki](https://github.com/yourusername/your-repo/wiki)
-- **Security**: Report security issues privately via email
+- **Issues**: [GitHub Issues](https://github.com/talltechy/scripts_snippets/issues)
+- **Documentation**: [Repository Wiki](https://github.com/talltechy/scripts_snippets/wiki)
+- **Security**: Report security issues via GitHub Issues with the "security" label
 
 ## 🔗 Related Projects
 
-- [SSH Hardening Guide](https://github.com/yourusername/ssh-hardening)
-- [Linux Security Toolkit](https://github.com/yourusername/linux-security)
-- [Server Setup Scripts](https://github.com/yourusername/server-setup)
+- [Scripts & Snippets Collection](https://github.com/talltechy/scripts_snippets) - Main repository
+- [Bash Scripts](https://github.com/talltechy/scripts_snippets/tree/main/bash) - Other bash automation scripts
+- [Python Utilities](https://github.com/talltechy/scripts_snippets/tree/main/python) - Python automation tools
 
 ---
 
