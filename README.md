@@ -7,6 +7,19 @@
 
 A curated collection of **enterprise-grade automation scripts** and utilities designed to streamline system administration, enhance security, and automate repetitive tasks across multiple platforms. Built with a **security-first approach** and professional-quality user interfaces.
 
+## ⚡ Quick Download & Install
+
+```bash
+# One-line download and setup
+curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/bash/create_admin_user/create_admin_user.sh | bash
+
+# Or clone the full repository
+git clone https://github.com/talltechy/scripts_snippets.git && cd scripts_snippets && find bash/ -name "*.sh" -exec chmod +x {} \;
+
+# Quick test with flagship tool
+cd bash/create_admin_user && ./create_admin_user.sh --help
+```
+
 ## 🏆 Featured Tools
 
 ### 🔐 Admin User Creation Suite
