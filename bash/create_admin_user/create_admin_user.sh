@@ -50,6 +50,7 @@ DRY_RUN=false
 NON_INTERACTIVE=false
 VALIDATE_ONLY=false
 TEST_SETUP=false
+TEST_CONNECTIVITY=false
 ALLOW_NO_PASSPHRASE=false
 SKIP_VERSION_CHECK=false
 ASSUME_YES=false
@@ -365,6 +366,7 @@ OPTIONS:
     --dry-run                     Show what would be done without making changes
     --validate-only               Check prerequisites and validate configuration
     --test-setup                  Test existing user configuration
+    --test-connectivity           Run network connectivity diagnostics and exit
     --create-config               Create configuration template and exit
     
     Script Options:
@@ -588,9 +590,99 @@ generate_sudo_config() {
     fi
 }
 
-# --- Version Management Functions ---
+# --- Network and Version Management Functions ---
+test_github_connectivity() {
+    local timeout="${1:-3}"
+    local test_url="https://github.com"
+    
+    if [[ "$VERBOSE" == "true" ]]; then
+        print_info "Testing GitHub connectivity..."
+    fi
+    
+    # Test basic GitHub connectivity first
+    if command -v curl >/dev/null 2>&1; then
+        if curl -s --connect-timeout "$timeout" --max-time "$timeout" "$test_url" >/dev/null 2>&1; then
+            if [[ "$VERBOSE" == "true" ]]; then
+                print_success "GitHub connectivity confirmed (curl)"
+            fi
+            return 0
+        fi
+    elif command -v wget >/dev/null 2>&1; then
+        if wget -q --timeout="$timeout" --spider "$test_url" >/dev/null 2>&1; then
+            if [[ "$VERBOSE" == "true" ]]; then
+                print_success "GitHub connectivity confirmed (wget)"
+            fi
+            return 0
+        fi
+    else
+        if [[ "$VERBOSE" == "true" ]]; then
+            print_warning "Neither curl nor wget available for connectivity test"
+        fi
+        return 1
+    fi
+    
+    if [[ "$VERBOSE" == "true" ]]; then
+        print_warning "GitHub connectivity test failed"
+    fi
+    return 1
+}
+
+test_connectivity_detailed() {
+    print_section "Network Connectivity Diagnostics"
+    
+    print_step "1/4" "Testing basic internet connectivity"
+    if command -v curl >/dev/null 2>&1; then
+        if curl -s --connect-timeout 3 --max-time 5 http://google.com >/dev/null 2>&1; then
+            print_success "Basic internet connectivity: OK"
+        else
+            print_warning "Basic internet connectivity: FAILED"
+        fi
+    else
+        print_info "curl not available for basic connectivity test"
+    fi
+    
+    print_step "2/4" "Testing GitHub connectivity"
+    if test_github_connectivity 5; then
+        print_success "GitHub connectivity: OK"
+    else
+        print_warning "GitHub connectivity: FAILED"
+    fi
+    
+    print_step "3/4" "Testing GitHub API accessibility"
+    local api_url="https://api.github.com"
+    if command -v curl >/dev/null 2>&1; then
+        local api_response=$(curl -s --connect-timeout 3 --max-time 5 "$api_url" 2>/dev/null)
+        if [[ -n "$api_response" && "$api_response" =~ "current_user_url" ]]; then
+            print_success "GitHub API accessibility: OK"
+        else
+            print_warning "GitHub API accessibility: FAILED or limited"
+        fi
+    else
+        print_info "curl not available for API test"
+    fi
+    
+    print_step "4/4" "Testing repository access"
+    local repo_url="https://api.github.com/repos/$GITHUB_REPO"
+    if command -v curl >/dev/null 2>&1; then
+        local repo_response=$(curl -s --connect-timeout 3 --max-time 5 "$repo_url" 2>/dev/null)
+        if [[ -n "$repo_response" && "$repo_response" =~ "full_name" ]]; then
+            print_success "Repository access: OK"
+        else
+            print_warning "Repository access: FAILED (may be private or not found)"
+        fi
+    else
+        print_info "curl not available for repository test"
+    fi
+    
+    echo ""
+    print_info "Connectivity diagnostics complete"
+}
+
 check_latest_version() {
     if [[ "$SKIP_VERSION_CHECK" == "true" ]]; then
+        if [[ "$VERBOSE" == "true" ]]; then
+            print_info "Version check skipped (--skip-version-check)"
+        fi
         return 0
     fi
     
@@ -599,7 +691,7 @@ check_latest_version() {
         local cache_age=$(( $(date +%s) - $(stat -c %Y "$VERSION_CHECK_CACHE" 2>/dev/null || echo 0) ))
         if [[ $cache_age -lt 3600 ]]; then  # Cache for 1 hour
             if [[ "$VERBOSE" == "true" ]]; then
-                print_info "Using cached version information"
+                print_info "Using cached version information (${cache_age}s old)"
             fi
             return 0
         fi
@@ -607,30 +699,77 @@ check_latest_version() {
     
     print_info "Checking for updates..."
     
-    # Query GitHub API with timeout
+    # Test GitHub connectivity first
+    if ! test_github_connectivity "$VERSION_CHECK_TIMEOUT"; then
+        if [[ "$VERBOSE" == "true" ]]; then
+            print_warning "Skipping version check (no GitHub connectivity)"
+            print_tip "Use --test-connectivity to diagnose network issues"
+        else
+            print_info "Skipping version check (network unavailable)"
+        fi
+        return 0
+    fi
+    
+    # Query GitHub API with timeout and proper error handling
     local api_url="https://api.github.com/repos/$GITHUB_REPO/releases/latest"
     local latest_version=""
+    local api_success=false
     
     if command -v curl >/dev/null 2>&1; then
-        latest_version=$(curl -s --connect-timeout "$VERSION_CHECK_TIMEOUT" --max-time "$VERSION_CHECK_TIMEOUT" "$api_url" 2>/dev/null | grep '"tag_name"' | cut -d'"' -f4 | sed 's/^v//')
+        if [[ "$VERBOSE" == "true" ]]; then
+            print_info "Querying GitHub API for latest release..."
+        fi
+        
+        # Use a more robust approach with explicit error handling
+        local curl_output
+        if curl_output=$(curl -s --connect-timeout "$VERSION_CHECK_TIMEOUT" --max-time "$VERSION_CHECK_TIMEOUT" --fail "$api_url" 2>&1); then
+            latest_version=$(echo "$curl_output" | grep '"tag_name"' | cut -d'"' -f4 | sed 's/^v//' 2>/dev/null)
+            if [[ -n "$latest_version" ]]; then
+                api_success=true
+            fi
+        else
+            if [[ "$VERBOSE" == "true" ]]; then
+                print_warning "GitHub API request failed: HTTP error or timeout"
+            fi
+        fi
     elif command -v wget >/dev/null 2>&1; then
-        latest_version=$(wget -qO- --timeout="$VERSION_CHECK_TIMEOUT" "$api_url" 2>/dev/null | grep '"tag_name"' | cut -d'"' -f4 | sed 's/^v//')
+        if [[ "$VERBOSE" == "true" ]]; then
+            print_info "Querying GitHub API for latest release (using wget)..."
+        fi
+        
+        local wget_output
+        if wget_output=$(wget -qO- --timeout="$VERSION_CHECK_TIMEOUT" "$api_url" 2>&1); then
+            latest_version=$(echo "$wget_output" | grep '"tag_name"' | cut -d'"' -f4 | sed 's/^v//' 2>/dev/null)
+            if [[ -n "$latest_version" ]]; then
+                api_success=true
+            fi
+        else
+            if [[ "$VERBOSE" == "true" ]]; then
+                print_warning "GitHub API request failed using wget"
+            fi
+        fi
     else
+        print_warning "Neither curl nor wget available - cannot check for updates"
+        return 0
+    fi
+    
+    if [[ "$api_success" != "true" || -z "$latest_version" ]]; then
         if [[ "$VERBOSE" == "true" ]]; then
-            print_warning "Neither curl nor wget available - skipping version check"
+            print_warning "Could not retrieve version information from GitHub API"
+            print_tip "This may be due to rate limiting, network issues, or repository access"
+            print_tip "Use --test-connectivity for detailed network diagnostics"
+        else
+            print_info "Unable to check for updates (API unavailable)"
         fi
         return 0
     fi
     
-    if [[ -z "$latest_version" ]]; then
-        if [[ "$VERBOSE" == "true" ]]; then
-            print_warning "Could not check for updates (network/API issue)"
-        fi
-        return 0
-    fi
-    
-    # Cache the result
+    # Cache the successful result
     echo "$latest_version" > "$VERSION_CHECK_CACHE" 2>/dev/null || true
+    
+    if [[ "$VERBOSE" == "true" ]]; then
+        print_info "Retrieved latest version: v$latest_version"
+    fi
     
     # Compare versions
     if [[ "$latest_version" != "$SCRIPT_VERSION" ]]; then
@@ -734,6 +873,10 @@ while [[ $# -gt 0 ]]; do
             TEST_SETUP="true"
             shift
             ;;
+        --test-connectivity)
+            TEST_CONNECTIVITY="true"
+            shift
+            ;;
         --create-config)
             require_root
             create_config_template "$DEFAULT_CONFIG_FILE"
@@ -805,6 +948,11 @@ fi
 if [[ "$TEST_SETUP" == "true" ]]; then
     print_section "Testing User Setup"
     test_user_setup "$USERNAME"
+    exit $?
+fi
+
+if [[ "$TEST_CONNECTIVITY" == "true" ]]; then
+    test_connectivity_detailed
     exit $?
 fi
 
