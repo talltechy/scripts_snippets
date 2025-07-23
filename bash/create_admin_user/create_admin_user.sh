@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # --- Script Information ---
-SCRIPT_VERSION="2.1.1"
+SCRIPT_VERSION="2.2.0"
 SCRIPT_NAME="create_admin_user.sh"
 LAST_UPDATED="2025-07-23"
 
@@ -34,13 +34,16 @@ else
 fi
 
 # --- Configurable variables ---
-DEFAULT_USERNAME="talltechy"
+DEFAULT_USERNAME="admin"
 DEFAULT_SUDO_LEVEL="standard"
 DEFAULT_CONFIG_FILE="/etc/create_admin_user.conf"
 LOG_FILE="/var/log/create_admin_user.log"
 REQUIRE_PASSPHRASE="true"
 BACKUP_RETENTION_DAYS="30"
 KEY_EXPIRY_DAYS="365"
+GITHUB_REPO="talltechy/scripts_snippets"
+VERSION_CHECK_CACHE="/tmp/.create_admin_user_version_check"
+VERSION_CHECK_TIMEOUT="5"
 
 # --- Global flags ---
 DRY_RUN=false
@@ -48,6 +51,9 @@ NON_INTERACTIVE=false
 VALIDATE_ONLY=false
 TEST_SETUP=false
 ALLOW_NO_PASSPHRASE=false
+SKIP_VERSION_CHECK=false
+ASSUME_YES=false
+VERBOSE=false
 
 # --- Sudo permission templates ---
 get_sudo_template() {
@@ -115,6 +121,36 @@ print_info() {
 print_tip() {
     local message="$1"
     echo -e "${CYAN}💡 ${DIM}Tip: $message${NC}"
+}
+
+print_divider() {
+    echo -e "${BLUE}$(printf '━%.0s' $(seq 1 60))${NC}"
+}
+
+print_waiting() {
+    local message="$1"
+    echo -e "\n${YELLOW}⏳ ${BOLD}WAITING FOR INPUT${NC}"
+    echo -e "${YELLOW}${message}${NC}\n"
+}
+
+confirm_proceed() {
+    local message="${1:-Do you want to proceed?}"
+    if [[ "$ASSUME_YES" == "true" ]]; then
+        echo -e "${GREEN}✓ Auto-confirmed (--assume-yes)${NC}"
+        return 0
+    fi
+    
+    echo -e "\n${YELLOW}❓ ${BOLD}$message${NC} ${DIM}[y/N]${NC}"
+    read -r response
+    case "$response" in
+        [yY]|[yY][eE][sS])
+            return 0
+            ;;
+        *)
+            echo -e "${RED}❌ Operation cancelled by user${NC}"
+            return 1
+            ;;
+    esac
 }
 
 show_progress() {
@@ -330,6 +366,11 @@ OPTIONS:
     --validate-only               Check prerequisites and validate configuration
     --test-setup                  Test existing user configuration
     --create-config               Create configuration template and exit
+    
+    Script Options:
+    --skip-version-check          Skip checking for script updates
+    --assume-yes                  Automatically answer yes to prompts
+    --verbose                     Show detailed output and debug information
 
 SUDO LEVELS:
     minimal     Basic system commands (systemctl status, ls, cat, etc.)
@@ -547,6 +588,87 @@ generate_sudo_config() {
     fi
 }
 
+# --- Version Management Functions ---
+check_latest_version() {
+    if [[ "$SKIP_VERSION_CHECK" == "true" ]]; then
+        return 0
+    fi
+    
+    # Check cache first
+    if [[ -f "$VERSION_CHECK_CACHE" ]]; then
+        local cache_age=$(( $(date +%s) - $(stat -c %Y "$VERSION_CHECK_CACHE" 2>/dev/null || echo 0) ))
+        if [[ $cache_age -lt 3600 ]]; then  # Cache for 1 hour
+            if [[ "$VERBOSE" == "true" ]]; then
+                print_info "Using cached version information"
+            fi
+            return 0
+        fi
+    fi
+    
+    print_info "Checking for updates..."
+    
+    # Query GitHub API with timeout
+    local api_url="https://api.github.com/repos/$GITHUB_REPO/releases/latest"
+    local latest_version=""
+    
+    if command -v curl >/dev/null 2>&1; then
+        latest_version=$(curl -s --connect-timeout "$VERSION_CHECK_TIMEOUT" --max-time "$VERSION_CHECK_TIMEOUT" "$api_url" 2>/dev/null | grep '"tag_name"' | cut -d'"' -f4 | sed 's/^v//')
+    elif command -v wget >/dev/null 2>&1; then
+        latest_version=$(wget -qO- --timeout="$VERSION_CHECK_TIMEOUT" "$api_url" 2>/dev/null | grep '"tag_name"' | cut -d'"' -f4 | sed 's/^v//')
+    else
+        if [[ "$VERBOSE" == "true" ]]; then
+            print_warning "Neither curl nor wget available - skipping version check"
+        fi
+        return 0
+    fi
+    
+    if [[ -z "$latest_version" ]]; then
+        if [[ "$VERBOSE" == "true" ]]; then
+            print_warning "Could not check for updates (network/API issue)"
+        fi
+        return 0
+    fi
+    
+    # Cache the result
+    echo "$latest_version" > "$VERSION_CHECK_CACHE" 2>/dev/null || true
+    
+    # Compare versions
+    if [[ "$latest_version" != "$SCRIPT_VERSION" ]]; then
+        print_warning "A newer version is available: v$latest_version (current: v$SCRIPT_VERSION)"
+        echo -e "${CYAN}📥 To update, run:${NC}"
+        echo -e "${DIM}   curl -fsSL https://raw.githubusercontent.com/$GITHUB_REPO/main/bash/create_admin_user/create_admin_user.sh -o create_admin_user.sh && chmod +x create_admin_user.sh${NC}"
+        echo ""
+        
+        if [[ "$NON_INTERACTIVE" == "false" ]]; then
+            if ! confirm_proceed "Continue with current version?"; then
+                exit 0
+            fi
+        fi
+    else
+        print_success "You have the latest version (v$SCRIPT_VERSION)"
+    fi
+}
+
+show_what_will_be_done() {
+    print_divider
+    echo -e "${BOLD}📋 WHAT THIS SCRIPT WILL DO:${NC}"
+    echo -e "${BLUE}•${NC} Create user account: ${BOLD}$USERNAME${NC}"
+    echo -e "${BLUE}•${NC} Configure sudo permissions: ${BOLD}$SUDO_LEVEL${NC} level"
+    if [[ -n "$CUSTOM_SUDO_COMMANDS" ]]; then
+        echo -e "${BLUE}•${NC} Custom sudo commands: ${BOLD}$CUSTOM_SUDO_COMMANDS${NC}"
+    fi
+    echo -e "${BLUE}•${NC} Generate SSH keys with Ed25519 encryption"
+    echo -e "${BLUE}•${NC} Set up secure file permissions"
+    echo -e "${BLUE}•${NC} Create backups in: ${DIM}$BACKUP_DIR${NC}"
+    
+    if [[ "$SUDO_LEVEL" == "full" ]]; then
+        echo ""
+        print_warning "This will grant FULL system access to the user!"
+    fi
+    
+    print_divider
+}
+
 # --- Argument parsing ---
 SUDO_LEVEL="$DEFAULT_SUDO_LEVEL"
 CUSTOM_SUDO_COMMANDS=""
@@ -619,6 +741,18 @@ while [[ $# -gt 0 ]]; do
             echo "Edit the file and run the script again."
             exit 0
             ;;
+        --skip-version-check)
+            SKIP_VERSION_CHECK="true"
+            shift
+            ;;
+        --assume-yes)
+            ASSUME_YES="true"
+            shift
+            ;;
+        --verbose)
+            VERBOSE="true"
+            shift
+            ;;
         -*)
             echo "Unknown option: $1" >&2
             echo "Use --help for usage information." >&2
@@ -635,6 +769,9 @@ done
 
 # Show header
 print_header "Admin User Creation Script v$SCRIPT_VERSION"
+
+# Check for updates (unless skipped)
+check_latest_version
 
 # Load configuration if specified
 if [[ -n "$CONFIG_FILE" ]]; then
@@ -708,6 +845,21 @@ log "Sudo level: $SUDO_LEVEL, Dry run: $DRY_RUN, Non-interactive: $NON_INTERACTI
 # Validate prerequisites
 if ! validate_prerequisites; then
     exit 1
+fi
+
+# Show what will be done and get confirmation (unless in non-interactive mode)
+if [[ "$NON_INTERACTIVE" == "false" && "$DRY_RUN" == "false" ]]; then
+    show_what_will_be_done
+    
+    print_warning "⚠️  SYSTEM CHANGES REQUIRED"
+    echo -e "${YELLOW}This script will modify your system by creating users, configuring sudo access, and generating SSH keys.${NC}"
+    
+    if ! confirm_proceed "Ready to proceed with user creation?"; then
+        echo -e "${BLUE}ℹ️  Operation cancelled. No changes were made.${NC}"
+        exit 0
+    fi
+    
+    echo -e "${GREEN}✓ Proceeding with user setup...${NC}"
 fi
 
 # Create backup directory
