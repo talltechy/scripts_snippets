@@ -7,17 +7,11 @@
 
 A curated collection of **enterprise-grade automation scripts** and utilities designed to streamline system administration, enhance security, and automate repetitive tasks across multiple platforms. Built with a **security-first approach** and professional-quality user interfaces.
 
-## ⚡ Quick Download & Install
+## ⚡ Quick Repository Access
 
 ```bash
-# One-line download and setup
-curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/bash/create_admin_user/create_admin_user.sh | bash
-
-# Or clone the full repository
-git clone https://github.com/talltechy/scripts_snippets.git && cd scripts_snippets && find bash/ -name "*.sh" -exec chmod +x {} \;
-
-# Quick test with flagship tool
-cd bash/create_admin_user && ./create_admin_user.sh --help
+# Clone the full repository
+git clone https://github.com/talltechy/scripts_snippets.git && cd scripts_snippets
 ```
 
 ## 🏆 Featured Tools
@@ -35,9 +29,22 @@ Our **flagship tool** for secure Linux user management with enterprise-grade fea
 - **📊 Comprehensive Logging**: Audit trails and detailed security event logging
 - **✅ Production Ready**: Backup systems, validation, and rollback capabilities
 
+**⚡ Quick Install:**
+```bash
+# Download and run directly
+curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/bash/create_admin_user/create_admin_user.sh -o create_admin_user.sh && chmod +x create_admin_user.sh && ./create_admin_user.sh
+
+# Or download the complete suite
+mkdir -p create_admin_user && cd create_admin_user
+curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/bash/create_admin_user/create_admin_user.sh -o create_admin_user.sh
+curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/bash/create_admin_user/config.example -o config.example
+chmod +x create_admin_user.sh && ./create_admin_user.sh --help
+```
+
+**Usage:**
 ```bash
 # Quick start - Interactive mode
-cd bash/create_admin_user && ./create_admin_user.sh
+./create_admin_user.sh
 
 # Enterprise automation
 ./create_admin_user.sh --config production.conf --non-interactive --dry-run
@@ -52,29 +59,40 @@ Automated system updates with email notifications and comprehensive logging:
 - Detailed logging and error reporting
 - Configurable update policies
 
+**⚡ Quick Install:**
+```bash
+# Download and run
+curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/bash/auto-update.sh -o auto-update.sh && chmod +x auto-update.sh && ./auto-update.sh --help
+
+# Download with environment file
+curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/bash/auto-update.sh -o auto-update.sh
+curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/bash/auto-update.env -o auto-update.env
+chmod +x auto-update.sh && ./auto-update.sh --setup
+```
+
 ## 📂 Complete Tool Inventory
 
 ### 🐧 Bash Scripts
-| Tool | Purpose | Status | Features |
-|------|---------|--------|----------|
-| **[create_admin_user.sh](bash/create_admin_user/)** | User management suite | 🏆 Flagship | Enterprise UI, granular security, automation |
-| **[auto-update.sh](bash/auto-update.sh)** | System updates | ✅ Production | Multi-distro, email notifications |
-| **[first_boot_fedora.sh](bash/first_boot_fedora.sh)** | Fedora initialization | ✅ Stable | First-boot configuration |
-| **[init_fedora.sh](bash/init_fedora.sh)** | Fedora setup | ✅ Stable | Package installation, settings |
-| **[qemu_guest_agent.sh](bash/qemu_guest_agent.sh)** | VM management | ✅ Stable | QEMU guest agent setup |
-| **[ssh_key.sh](bash/ssh_key.sh)** | SSH key generation | ✅ Stable | Secure key creation |
+| Tool | Purpose | Status | Quick Install |
+|------|---------|--------|---------------|
+| **[create_admin_user.sh](bash/create_admin_user/)** | User management suite | 🏆 Flagship | `curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/bash/create_admin_user/create_admin_user.sh -o create_admin_user.sh && chmod +x create_admin_user.sh` |
+| **[auto-update.sh](bash/auto-update.sh)** | System updates | ✅ Production | `curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/bash/auto-update.sh -o auto-update.sh && chmod +x auto-update.sh` |
+| **[first_boot_fedora.sh](bash/first_boot_fedora.sh)** | Fedora initialization | ✅ Stable | `curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/bash/first_boot_fedora.sh -o first_boot_fedora.sh && chmod +x first_boot_fedora.sh` |
+| **[init_fedora.sh](bash/init_fedora.sh)** | Fedora setup | ✅ Stable | `curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/bash/init_fedora.sh -o init_fedora.sh && chmod +x init_fedora.sh` |
+| **[qemu_guest_agent.sh](bash/qemu_guest_agent.sh)** | VM management | ✅ Stable | `curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/bash/qemu_guest_agent.sh -o qemu_guest_agent.sh && chmod +x qemu_guest_agent.sh` |
+| **[ssh_key.sh](bash/ssh_key.sh)** | SSH key generation | ✅ Stable | `curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/bash/ssh_key.sh -o ssh_key.sh && chmod +x ssh_key.sh` |
 
 ### 🐍 Python Utilities
-| Module | Purpose | Features |
-|--------|---------|----------|
-| **[utils.py](python/new_project/utils.py)** | Core utilities | Secure logging, random generation |
-| **[validators.py](python/new_project/validators.py)** | Input validation | Email validation, security checks |
+| Module | Purpose | Quick Install |
+|--------|---------|---------------|
+| **[utils.py](python/new_project/utils.py)** | Core utilities | `curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/python/new_project/utils.py -o utils.py` |
+| **[validators.py](python/new_project/validators.py)** | Input validation | `curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/python/new_project/validators.py -o validators.py` |
 
 ### 💻 PowerShell Scripts
-| Script | Purpose | Platform |
-|--------|---------|----------|
-| **[datadog-download-install.ps1](powershell/old/datadog-download-install.ps1)** | Monitoring setup | Windows |
-| **[powershell_function_download_file.ps1](powershell/old/powershell_function_download_file.ps1)** | File utilities | Windows |
+| Script | Purpose | Quick Install |
+|--------|---------|---------------|
+| **[datadog-download-install.ps1](powershell/old/datadog-download-install.ps1)** | Monitoring setup | `Invoke-WebRequest -Uri "https://raw.githubusercontent.com/talltechy/scripts_snippets/main/powershell/old/datadog-download-install.ps1" -OutFile "datadog-download-install.ps1"` |
+| **[powershell_function_download_file.ps1](powershell/old/powershell_function_download_file.ps1)** | File utilities | `Invoke-WebRequest -Uri "https://raw.githubusercontent.com/talltechy/scripts_snippets/main/powershell/old/powershell_function_download_file.ps1" -OutFile "powershell_function_download_file.ps1"` |
 
 ### 📊 Excel/VBA Automation
 | Tool | Purpose | Capability |
@@ -84,12 +102,12 @@ Automated system updates with email notifications and comprehensive logging:
 | **Chart Protection** | Worksheet security | Protected editing capabilities |
 
 ### 🛡️ Security & Vulnerability Fixes
-| Fix | CVE/Issue | Platform |
-|-----|-----------|----------|
-| **Adobe Flash Removal** | Security cleanup | Windows |
-| **CVE-2013-3900** | Authenticode bypass | Windows |
-| **LAN Manager Hash** | Weak authentication | Windows |
-| **Registry Security** | DDE, Defender controls | Windows |
+| Fix | CVE/Issue | Quick Install |
+|-----|-----------|---------------|
+| **[Adobe Flash Removal](Vulnerability_Fix/adobe_flash/)** | Security cleanup | `Invoke-WebRequest -Uri "https://raw.githubusercontent.com/talltechy/scripts_snippets/main/Vulnerability_Fix/adobe_flash/uninstall_flash.ps1" -OutFile "uninstall_flash.ps1"` |
+| **[CVE-2013-3900](Vulnerability_Fix/CVE-2013-3900/)** | Authenticode bypass | `curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/Vulnerability_Fix/CVE-2013-3900/enableAuthenticodeVerification64.reg -o enableAuthenticodeVerification64.reg` |
+| **[LAN Manager Hash](Vulnerability_Fix/VULN%20Fix/)** | Weak authentication | `Invoke-WebRequest -Uri "https://raw.githubusercontent.com/talltechy/scripts_snippets/main/Vulnerability_Fix/VULN%20Fix/Weak_LAN_Manager_hashing_permitted.ps1" -OutFile "Weak_LAN_Manager_hashing_permitted.ps1"` |
+| **[Registry Security](windows/registry/)** | DDE, Defender controls | `curl -fsSL https://raw.githubusercontent.com/talltechy/scripts_snippets/main/windows/registry/old/disable_ddeauto.reg -o disable_ddeauto.reg` |
 
 ## 🚀 Quick Start Guide
 
