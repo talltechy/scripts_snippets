@@ -1,0 +1,65 @@
+# Admin User Creation Script Configuration
+# Example configuration file for create_admin_user.sh v2.1.0
+# Copy this file to /etc/create_admin_user.conf and customize as needed
+
+# Default username for user creation
+# This will be used if no username is provided on the command line
+DEFAULT_USERNAME="admin"
+
+# Default sudo permission level (minimal|standard|admin|full)
+# minimal:  Basic system commands (systemctl status, ls, cat, etc.)
+# standard: Service management, package installation, docker (recommended)
+# admin:    User management, system configuration
+# full:     Complete sudo access (use with extreme caution)
+DEFAULT_SUDO_LEVEL="standard"
+
+# Require SSH key passphrase (true|false)
+# Setting to "true" enforces passphrase creation for better security
+# Can be overridden with --allow-no-passphrase flag
+REQUIRE_PASSPHRASE="true"
+
+# Backup retention in days
+# Automatic cleanup of old backup directories after this many days
+BACKUP_RETENTION_DAYS="30"
+
+# SSH key expiry warning in days
+# Script will warn if SSH keys are older than this threshold
+KEY_EXPIRY_DAYS="365"
+
+# Custom sudo commands (comma-separated, overrides DEFAULT_SUDO_LEVEL)
+# Uncomment and customize to define specific commands instead of using levels
+# Example: CUSTOM_SUDO_COMMANDS="/usr/bin/systemctl,/usr/bin/docker,/usr/bin/git"
+# CUSTOM_SUDO_COMMANDS=""
+
+# Advanced Configuration Options
+# These settings provide additional control over script behavior
+
+# Log file location (must be writable by root)
+# LOG_FILE="/var/log/create_admin_user.log"
+
+# Default configuration file location
+# DEFAULT_CONFIG_FILE="/etc/create_admin_user.conf"
+
+# Example Deployment Scenarios:
+
+# Minimal Security Environment (development/testing)
+# DEFAULT_SUDO_LEVEL="minimal"
+# REQUIRE_PASSPHRASE="false"
+# KEY_EXPIRY_DAYS="90"
+
+# High Security Environment (production)
+# DEFAULT_SUDO_LEVEL="minimal"
+# REQUIRE_PASSPHRASE="true"
+# KEY_EXPIRY_DAYS="180"
+# BACKUP_RETENTION_DAYS="90"
+
+# DevOps Environment (CI/CD automation)
+# DEFAULT_SUDO_LEVEL="admin"
+# REQUIRE_PASSPHRASE="false"  # For automation, use with --non-interactive
+# KEY_EXPIRY_DAYS="30"
+
+# Container/Cloud Environment
+# DEFAULT_SUDO_LEVEL="standard"
+# REQUIRE_PASSPHRASE="true"
+# KEY_EXPIRY_DAYS="365"
+# BACKUP_RETENTION_DAYS="7"  # Shorter retention for ephemeral systems

@@ -1,21 +1,34 @@
 # Admin User Creation Script
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](CHANGELOG.md)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](#-license)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](CHANGELOG.md)
+[![License](https://img.shields.io/badge/license-CC0--1.0-green.svg)](#-license)
 [![Bash](https://img.shields.io/badge/bash-4.0%2B-orange.svg)](https://www.gnu.org/software/bash/)
+[![Security](https://img.shields.io/badge/security-enhanced-brightgreen.svg)](#-security-features)
 
-A robust, production-ready bash script for creating administrative users with SSH key authentication and passwordless sudo access on Linux systems.
+A comprehensive, security-focused bash script for creating administrative users with granular sudo permissions, SSH key authentication, and enterprise-grade automation support on Linux systems.
 
 ## 🚀 Features
 
-- ✅ **Secure Admin User Creation** with comprehensive validation
-- 🔐 **SSH Key Generation** using modern Ed25519 encryption
-- 🛡️ **Passwordless Sudo Configuration** with syntax validation
-- 📁 **Organized Backup System** with timestamped directories
-- 🔍 **Setup Verification** to ensure everything works correctly
-- 🧹 **Automatic Cleanup** on failure to prevent partial configurations
-- 📝 **Comprehensive Logging** with security-focused permissions
-- 🎯 **User-Friendly Output** with clear status indicators
+### 🔒 **Security-First Design**
+- ✅ **Granular Sudo Permissions** with four security levels (minimal|standard|admin|full)
+- 🔐 **Enhanced SSH Key Security** with mandatory passphrase enforcement
+- 🛡️ **Custom Sudo Commands** for precise permission control
+- 📊 **SSH Key Expiry Tracking** with automated warnings
+- 🔍 **Comprehensive Security Validation** and testing
+
+### 🤖 **Enterprise Automation**
+- ⚡ **Non-Interactive Mode** for CI/CD and automated deployments
+- 📋 **Configuration File Support** with hierarchical settings
+- 🧪 **Dry-Run Mode** for testing and validation
+- 🔧 **Pre-Hashed Password Support** for secure automation
+- 📥 **SSH Key Import** functionality
+
+### 🛠️ **Advanced Management**
+- 📁 **Intelligent Backup System** with automatic cleanup
+- 🔍 **Setup Verification** and health checking
+- 📝 **Structured Logging** with security audit trails
+- 🎯 **Enhanced User Experience** with detailed guidance
+- 🧹 **Automatic Cleanup** on failure with stage tracking
 
 ## 📋 Requirements
 
@@ -55,31 +68,99 @@ chmod +x create_admin_user.sh
 ### Basic Usage
 
 ```bash
-# Create user with default username 'talltechy'
+# Create user with default username and standard sudo level
 sudo ./create_admin_user.sh
 
 # Create user with custom username
-sudo ./create_admin_user.sh myusername
+sudo ./create_admin_user.sh myuser
 
-# Show help
+# Create user with minimal sudo permissions
+sudo ./create_admin_user.sh --sudo-level minimal myuser
+
+# Show comprehensive help
 ./create_admin_user.sh --help
 
-# Show version
+# Show version information
 ./create_admin_user.sh --version
 ```
 
-### Command Line Options
+### Security Options
 
-```text
-Usage: create_admin_user.sh [username]
+```bash
+# Create user with specific sudo level
+sudo ./create_admin_user.sh --sudo-level admin myuser
 
-Options:
-  -h, --help     Show help message
-  -v, --version  Show version information
+# Create user with custom sudo commands
+sudo ./create_admin_user.sh --sudo-commands "systemctl,docker,git" myuser
 
-Examples:
-  ./create_admin_user.sh              # Creates user 'talltechy'
-  ./create_admin_user.sh myuser       # Creates user 'myuser'
+# Require SSH key passphrase (default behavior)
+sudo ./create_admin_user.sh --require-passphrase myuser
+
+# Allow SSH key without passphrase (with warning)
+sudo ./create_admin_user.sh --allow-no-passphrase myuser
+
+# Set custom key expiry warning period
+sudo ./create_admin_user.sh --key-expiry-days 180 myuser
+```
+
+### Automation Options
+
+```bash
+# Non-interactive mode for automation
+sudo ./create_admin_user.sh --non-interactive --allow-no-passphrase myuser
+
+# Use configuration file
+sudo ./create_admin_user.sh --config-file /etc/myconfig.conf
+
+# Use pre-hashed password
+sudo ./create_admin_user.sh --non-interactive --password-hash '$6$salt$hash' myuser
+
+# Import existing SSH public key
+sudo ./create_admin_user.sh --ssh-pubkey "ssh-ed25519 AAAA..." myuser
+```
+
+### Testing and Validation
+
+```bash
+# Dry run - show what would be done
+sudo ./create_admin_user.sh --dry-run --sudo-level admin myuser
+
+# Validate prerequisites only
+./create_admin_user.sh --validate-only
+
+# Test existing user setup
+sudo ./create_admin_user.sh --test-setup myuser
+
+# Create configuration template
+sudo ./create_admin_user.sh --create-config
+```
+
+### Sudo Permission Levels
+
+| Level | Description | Commands Included |
+|-------|-------------|-------------------|
+| **minimal** | Basic system commands | `systemctl status`, `ls`, `cat`, `grep`, `tail` |
+| **standard** | Service management (default) | Service control, package management, docker, git |
+| **admin** | User management | Standard + user/group management, password changes |
+| **full** | Complete access (⚠️ use with caution) | All commands (`NOPASSWD:ALL`) |
+
+### Configuration File Support
+
+```bash
+# Create configuration template
+sudo ./create_admin_user.sh --create-config
+
+# Use custom configuration file
+sudo ./create_admin_user.sh --config-file /path/to/config.conf
+```
+
+Example configuration file (`/etc/create_admin_user.conf`):
+```bash
+DEFAULT_USERNAME="admin"
+DEFAULT_SUDO_LEVEL="standard"
+REQUIRE_PASSPHRASE="true"
+BACKUP_RETENTION_DAYS="30"
+KEY_EXPIRY_DAYS="365"
 ```
 
 ## 🛠️ What the Script Does
@@ -118,22 +199,45 @@ Examples:
 
 ## 🔒 Security Features
 
+### 🛡️ **Permission Control**
+- **Granular Sudo Levels**: Four security levels from minimal to full access
+- **Custom Command Support**: Define exact commands users can execute
+- **Default Security**: Secure defaults with explicit warnings for high-privilege access
+- **Permission Validation**: Comprehensive validation of all sudo configurations
+
+### 🔐 **SSH Key Security**
+- **Modern Encryption**: Ed25519 keys with superior security
+- **Mandatory Passphrases**: Enforced by default with bypass options
+- **Key Expiry Tracking**: Automated warnings for aging keys
+- **Key Import Support**: Secure import of existing SSH public keys
+- **Fingerprint Validation**: Automatic key integrity checking
+
+### 🔍 **System Security**
 - **Root Privilege Validation**: Ensures script runs with proper permissions
 - **Username Sanitization**: Validates usernames against secure patterns
 - **File Permission Management**: Sets restrictive permissions on sensitive files
 - **Sudoers Validation**: Uses `visudo -cf` to validate syntax before applying
-- **SSH Key Security**: Generates modern Ed25519 keys with passphrase support
 - **Backup Protection**: Stores backups in root-only accessible directories
 - **Log Security**: Restricts log file access to root only
+- **Configuration Security**: Safe parsing with injection attack prevention
+
+### 🧪 **Testing and Validation**
+- **Prerequisite Checking**: Validates system requirements before execution
+- **Dry-Run Mode**: Test configurations without making changes
+- **Setup Verification**: Comprehensive post-installation testing
+- **Health Monitoring**: Ongoing configuration health checks
 
 ## 📊 Success Verification
 
 The script automatically verifies:
 
 - ✅ User exists and is in sudo group
-- ✅ SSH private key is accessible
-- ✅ Sudoers configuration is valid
-- ✅ File permissions are correct
+- ✅ SSH private key is accessible and valid
+- ✅ Sudoers configuration is syntactically correct
+- ✅ File permissions are properly set (700, 600, 644)
+- ✅ SSH key fingerprint is valid
+- ✅ Backup system is functioning
+- ✅ Configuration files are secure
 
 ## 🔍 Troubleshooting
 
@@ -182,12 +286,13 @@ If something goes wrong, backups are stored in:
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history and feature additions.
 
-### Latest Version: 2.0.0
+### Latest Version: 2.1.0
 
-- Added setup verification and cleanup on failure
-- Enhanced backup system with organized directories
-- Improved error handling and user experience
-- Added version tracking and better documentation
+- **Revolutionary Security Enhancement**: Granular sudo permission system with four levels
+- **Enterprise Automation**: Non-interactive mode, configuration files, dry-run testing
+- **Enhanced SSH Security**: Mandatory passphrases, key expiry tracking, import support
+- **Advanced Management**: Intelligent backups, comprehensive validation, health checking
+- **Improved User Experience**: Enhanced help, detailed guidance, security warnings
 
 ## 🤝 Contributing
 
